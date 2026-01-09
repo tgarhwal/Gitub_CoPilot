@@ -1,3 +1,8 @@
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
+import os
+from pathlib import Path
 """
 High School Management System API
 
@@ -21,6 +26,44 @@ app.mount("/static", StaticFiles(directory=os.path.join(Path(__file__).parent,
 
 # In-memory activity database
 activities = {
+    "Basketball Team": {
+        "description": "Join the basketball team and compete in local tournaments",
+        "schedule": "Mondays and Wednesdays, 4:00 PM - 6:00 PM",
+        "max_participants": 15,
+        "participants": []
+    },
+    "Soccer Club": {
+
+# API endpoint to remove a participant from an activity
+        "description": "Practice soccer skills and participate in matches",
+        "schedule": "Tuesdays and Thursdays, 5:00 PM - 7:00 PM",
+        "max_participants": 20,
+        "participants": []
+    },
+    "Art Club": {
+        "description": "Explore various art techniques and create projects",
+        "schedule": "Fridays, 3:00 PM - 5:00 PM",
+        "max_participants": 10,
+        "participants": []
+    },
+    "Drama Society": {
+        "description": "Participate in theater productions and improve acting skills",
+        "schedule": "Thursdays, 4:00 PM - 6:00 PM",
+        "max_participants": 15,
+        "participants": []
+    },
+    "Debate Club": {
+        "description": "Engage in debates on various topics and improve public speaking",
+        "schedule": "Wednesdays, 3:30 PM - 5:00 PM",
+        "max_participants": 20,
+        "participants": []
+    },
+    "Mathletes": {
+        "description": "Compete in math competitions and enhance problem-solving skills",
+        "schedule": "Tuesdays, 4:30 PM - 6:00 PM",
+        "max_participants": 12,
+        "participants": []
+    },
     "Chess Club": {
         "description": "Learn strategies and compete in chess tournaments",
         "schedule": "Fridays, 3:30 PM - 5:00 PM",
@@ -62,6 +105,24 @@ def signup_for_activity(activity_name: str, email: str):
     # Get the specific activity
     activity = activities[activity_name]
 
+    # Validate student not already signed up
+    if email in activity["participants"]:        
+        raise HTTPException(status_code=400, detail="Student already signed up for this activity")  
+
     # Add student
     activity["participants"].append(email)
     return {"message": f"Signed up {email} for {activity_name}"}
+
+# API endpoint to remove a participant from an activity
+from fastapi import Query
+
+@app.delete("/activities/{activity_name}/unregister")
+def unregister_from_activity(activity_name: str, email: str = Query(...)):
+    """Unregister a student from an activity"""
+    if activity_name not in activities:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    activity = activities[activity_name]
+    if email not in activity["participants"]:
+        raise HTTPException(status_code=404, detail="Participant not found in this activity")
+    activity["participants"].remove(email)
+    return {"message": f"Unregistered {email} from {activity_name}"}
